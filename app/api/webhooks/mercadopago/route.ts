@@ -2,13 +2,13 @@ import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { MercadoPagoConfig, Payment } from 'mercadopago'
 
-// Service role — sem RLS
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 export async function POST(request: Request) {
+  // Inicializar dentro do handler — nunca no nível do módulo
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
   const body = await request.json()
 
   // Idempotência — ignorar eventos já processados
@@ -34,9 +34,6 @@ export async function POST(request: Request) {
   // Processar pagamento aprovado
   if (body.type === 'payment' && body.data?.id) {
     try {
-      // Buscar usuário via external_reference (payment_link_id)
-      // Precisamos do access_token do usuário dono do link
-      // Por simplicidade, usamos o token global de env (single account MVP)
       const token = process.env.MERCADOPAGO_ACCESS_TOKEN!
       const mp = new MercadoPagoConfig({ accessToken: token })
       const paymentApi = new Payment(mp)
@@ -51,7 +48,7 @@ export async function POST(request: Request) {
           .update({ status: 'paid', paid_at: new Date().toISOString() })
           .eq('id', paymentLinkId)
 
-        // Atualizar serviço vinculado
+        // Buscar serviço vinculado e atualizar
         const { data: link } = await supabase
           .from('payment_links')
           .select('service_id')
