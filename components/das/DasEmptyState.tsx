@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
@@ -17,6 +18,7 @@ interface DasEmptyStateProps {
 export function DasEmptyState({ userId, year }: DasEmptyStateProps) {
   const supabase = createClient()
   const queryClient = useQueryClient()
+  const router = useRouter()
 
   const seed = useMutation({
     mutationFn: async () => {
@@ -28,8 +30,8 @@ export function DasEmptyState({ userId, year }: DasEmptyStateProps) {
     onSuccess: () => {
       toast.success(`Guias DAS de ${year} criadas!`)
       queryClient.invalidateQueries({ queryKey: ['das'] })
-      // Server component precisa re-executar para pegar os novos rows
-      window.location.reload()
+      // router.refresh() re-executa o Server Component sem recarregar o app
+      router.refresh()
     },
     onError: () => {
       toast.error('Erro ao criar as guias. Tente novamente.')

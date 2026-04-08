@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
@@ -23,6 +24,7 @@ const FAR_FUTURE_THRESHOLD_DAYS = 60
 export function DasList({ das, userId, year }: DasListProps) {
   const supabase = createClient()
   const queryClient = useQueryClient()
+  const router = useRouter()
   const [selected, setSelected] = useState<DasPayment | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
 
@@ -56,8 +58,8 @@ export function DasList({ das, userId, year }: DasListProps) {
       queryClient.invalidateQueries({ queryKey: ['das'] })
       setDialogOpen(false)
       setSelected(null)
-      // Server component precisa re-fetch
-      window.location.reload()
+      // router.refresh() re-executa o Server Component sem recarregar o app
+      router.refresh()
     },
     onError: () => toast.error('Erro ao salvar. Tente novamente.'),
   })

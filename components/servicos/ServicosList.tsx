@@ -71,6 +71,9 @@ export function ServicosList({ initialServices }: ServicosListProps) {
       return data as Service[]
     },
     initialData: initialServices,
+    // Sem isto, initialData é tratada como stale e dispara um refetch
+    // imediato no mount — duplicando a query do Server Component.
+    initialDataUpdatedAt: Date.now(),
     staleTime: 1000 * 60 * 2,
   })
 

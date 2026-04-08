@@ -13,58 +13,64 @@ export default async function InicioPage() {
   const yearStart = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0]
   const yearEnd = new Date(now.getFullYear(), 11, 31).toISOString().split('T')[0]
 
-  // Mês atual: serviços (paid + pending)
-  const { data: monthServices } = await supabase
-    .from('services')
-    .select('amount, status')
-    .eq('user_id', user!.id)
-    .gte('service_date', monthStart)
-    .lte('service_date', monthEnd)
+  // Todas as queries em paralelo — antes eram 6 awaits sequenciais (~600ms),
+  // agora rodam no tempo da mais lenta (~150ms).
+  const [
+    monthServicesRes,
+    prevMonthServicesRes,
+    yearServicesRes,
+    nextDasRes,
+    recentServicesRes,
+    profileRes,
+  ] = await Promise.all([
+    supabase
+      .from('services')
+      .select('amount, status')
+      .eq('user_id', user!.id)
+      .gte('service_date', monthStart)
+      .lte('service_date', monthEnd),
+    supabase
+      .from('services')
+      .select('amount')
+      .eq('user_id', user!.id)
+      .eq('status', 'paid')
+      .gte('service_date', prevMonthStart)
+      .lte('service_date', prevMonthEnd),
+    supabase
+      .from('services')
+      .select('amount')
+      .eq('user_id', user!.id)
+      .eq('status', 'paid')
+      .gte('service_date', yearStart)
+      .lte('service_date', yearEnd),
+    supabase
+      .from('das_payments')
+      .select('competence_month, due_date, amount, status')
+      .eq('user_id', user!.id)
+      .eq('status', 'pending')
+      .order('due_date', { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('services')
+      .select('id, description, amount, status, service_date, client_name_snapshot')
+      .eq('user_id', user!.id)
+      .order('service_date', { ascending: false })
+      .limit(4),
+    supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', user!.id)
+      .single(),
+  ])
 
-  // Mês anterior: só paid (para calcular delta %)
-  const { data: prevMonthServices } = await supabase
-    .from('services')
-    .select('amount')
-    .eq('user_id', user!.id)
-    .eq('status', 'paid')
-    .gte('service_date', prevMonthStart)
-    .lte('service_date', prevMonthEnd)
+  const monthServices = monthServicesRes.data
+  const prevMonthServices = prevMonthServicesRes.data
+  const yearServices = yearServicesRes.data
+  const nextDas = nextDasRes.data
+  const recentServices = recentServicesRes.data
+  const profile = profileRes.data
 
-  // Ano corrente: só paid (para banner limite MEI)
-  const { data: yearServices } = await supabase
-    .from('services')
-    .select('amount')
-    .eq('user_id', user!.id)
-    .eq('status', 'paid')
-    .gte('service_date', yearStart)
-    .lte('service_date', yearEnd)
-
-  // Próximo DAS pendente
-  const { data: nextDas } = await supabase
-    .from('das_payments')
-    .select('competence_month, due_date, amount, status')
-    .eq('user_id', user!.id)
-    .eq('status', 'pending')
-    .order('due_date', { ascending: true })
-    .limit(1)
-    .maybeSingle()
-
-  // 4 serviços mais recentes (qualquer status)
-  const { data: recentServices } = await supabase
-    .from('services')
-    .select('id, description, amount, status, service_date, client_name_snapshot')
-    .eq('user_id', user!.id)
-    .order('service_date', { ascending: false })
-    .limit(4)
-
-  // Profile (nome para saudação)
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name')
-    .eq('id', user!.id)
-    .single()
-
-  // Pendentes do mês — count para badge
   const pendingCount = monthServices?.filter(s => s.status === 'pending').length ?? 0
   const totalReceived = monthServices?.filter(s => s.status === 'paid').reduce((acc, s) => acc + s.amount, 0) ?? 0
   const totalPending = monthServices?.filter(s => s.status === 'pending').reduce((acc, s) => acc + s.amount, 0) ?? 0
