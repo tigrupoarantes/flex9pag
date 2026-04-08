@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { PageHeader } from '@/components/layout/PageHeader'
 import { AdminPlanosList } from '@/components/admin/AdminPlanosList'
 
 export default async function AdminPlanosPage() {
@@ -10,9 +11,9 @@ export default async function AdminPlanosPage() {
     .order('price_monthly', { ascending: true })
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold">Planos</h2>
+    <>
+      <PageHeader title="Planos" subtitle="Pacotes de assinatura disponíveis." />
       <AdminPlanosList plans={plans ?? []} />
-    </div>
+    </>
   )
 }

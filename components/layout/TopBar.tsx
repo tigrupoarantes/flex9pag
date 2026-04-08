@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 interface TopBarProps {
+  isAdmin?: boolean
   className?: string
 }
 
@@ -16,18 +17,13 @@ const NAV = [
   { href: '/configuracoes', label: 'Configurações' },
 ]
 
-/**
- * Top bar Apple-style: branca opaca, hairline embaixo, 56px de altura
- * fixa no topo. No mobile mostra só o nome do app. No desktop, nav inline.
- */
-export function TopBar({ className }: TopBarProps) {
+export function TopBar({ isAdmin = false, className }: TopBarProps) {
   const pathname = usePathname()
 
   return (
     <header
       className={cn(
-        'fixed top-0 inset-x-0 z-40 h-14 bg-white/90 backdrop-blur-xl',
-        'border-b border-border',
+        'fixed top-0 inset-x-0 z-40 h-14 bg-white/90 backdrop-blur-xl border-b border-border',
         className
       )}
     >
@@ -39,7 +35,6 @@ export function TopBar({ className }: TopBarProps) {
           flex9pag
         </Link>
 
-        {/* Nav inline desktop */}
         <nav className="hidden lg:flex items-center gap-1">
           {NAV.map((item) => {
             const isActive = pathname.startsWith(item.href)
@@ -58,6 +53,14 @@ export function TopBar({ className }: TopBarProps) {
               </Link>
             )
           })}
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="ml-2 px-3 py-1.5 rounded-md text-sm font-semibold text-primary bg-primary/10 hover:bg-primary/15 transition-colors"
+            >
+              Admin
+            </Link>
+          )}
         </nav>
       </div>
     </header>
