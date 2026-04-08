@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { TopBar } from '@/components/layout/TopBar'
+import { PageHeader } from '@/components/layout/PageHeader'
 import { ConfiguracoesForm } from '@/components/configuracoes/ConfiguracoesForm'
 
 export default async function ConfiguracoesPage() {
@@ -13,9 +13,9 @@ export default async function ConfiguracoesPage() {
     .single()
 
   return (
-    <div>
-      <TopBar title="Configurações" />
+    <>
+      <PageHeader title="Configurações" subtitle="Seus dados e tokens de pagamento." />
       <ConfiguracoesForm profile={profile} />
-    </div>
+    </>
   )
 }

@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -22,13 +22,9 @@ export default function LoginPage() {
     if (!email || !password) return
 
     setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
-      // Mensagens genéricas — não revelar se foi email ou senha errada
       if (error.message.toLowerCase().includes('invalid')) {
         toast.error('E-mail ou senha incorretos.')
       } else if (error.message.toLowerCase().includes('email not confirmed')) {
@@ -40,47 +36,52 @@ export default function LoginPage() {
       return
     }
 
-    // refresh força o RSC a re-renderizar lendo os novos cookies de sessão
     router.refresh()
     router.push('/inicio')
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white px-6">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-6">
       <div className="w-full max-w-sm">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <h1 className="font-headline text-4xl font-extrabold text-primary tracking-tight">flex9pag</h1>
-          <p className="text-on-surface-variant mt-2 text-sm">
-            Gestão de pagamentos para MEI
+        <div className="text-center mb-10">
+          <h1 className="text-4xl font-bold tracking-tight text-foreground">
+            flex9pag
+          </h1>
+          <p className="text-muted-foreground mt-2 text-sm">
+            Pagamentos para quem trabalha com as mãos.
           </p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="email" className="text-sm font-medium">
+              E-mail
+            </Label>
             <Input
               id="email"
               type="email"
               placeholder="seuemail@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="h-12 text-base"
+              className="h-12 text-base bg-secondary border-0 focus-visible:ring-2 focus-visible:ring-primary/30"
               autoComplete="email"
               required
               disabled={loading}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="password" className="text-sm font-medium">
+              Senha
+            </Label>
             <Input
               id="password"
               type="password"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="h-12 text-base"
+              className="h-12 text-base bg-secondary border-0 focus-visible:ring-2 focus-visible:ring-primary/30"
               autoComplete="current-password"
               required
               disabled={loading}
@@ -90,20 +91,18 @@ export default function LoginPage() {
 
           <Button
             type="submit"
-            className="w-full h-12 text-base"
+            className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary-hover mt-2"
             disabled={loading || !email || !password}
           >
-            {loading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              'Entrar'
-            )}
+            {loading ? <Loader2 className="size-5 animate-spin" /> : 'Entrar'}
           </Button>
         </form>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <p className="text-center text-xs text-muted-foreground mt-8">
           Ao entrar, você concorda com nossos{' '}
-          <a href="#" className="underline">Termos de Uso</a>
+          <a href="#" className="underline hover:text-foreground">
+            Termos de Uso
+          </a>
         </p>
       </div>
     </div>

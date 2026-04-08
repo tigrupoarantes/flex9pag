@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { TopBar } from '@/components/layout/TopBar'
+import { PageHeader } from '@/components/layout/PageHeader'
 import { NovoServicoForm } from '@/components/servicos/NovoServicoForm'
 
 export default async function NovoServicoPage() {
@@ -13,9 +13,9 @@ export default async function NovoServicoPage() {
     .order('name')
 
   return (
-    <div>
-      <TopBar title="Novo Serviço" />
+    <>
+      <PageHeader title="Novo serviço" subtitle="Anote o que você fez." />
       <NovoServicoForm clients={clients ?? []} />
-    </div>
+    </>
   )
 }

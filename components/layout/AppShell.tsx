@@ -1,43 +1,27 @@
 import { ReactNode } from 'react'
 import { BottomNav } from './BottomNav'
-import { SideNav } from './SideNav'
 import { TopBar } from './TopBar'
 
 interface AppShellProps {
   children: ReactNode
-  /** Nome completo do usuário — usado para iniciais e saudação. */
-  userName?: string | null
-  /** Título sobrescreve "flex9pag" no TopBar (mobile). */
-  title?: string
-  subtitle?: string
-}
-
-function getInitial(name?: string | null): string | undefined {
-  if (!name) return undefined
-  const trimmed = name.trim()
-  if (!trimmed) return undefined
-  return trimmed[0]?.toUpperCase()
 }
 
 /**
- * Shell responsivo do flex9pag.
- *
- * - Mobile (<lg): TopBar fixo + main centralizado max-w-lg + BottomNav glass
- * - Desktop (≥lg): SideNav fixo 256px à esquerda + TopBar full-width + main fluida
+ * Shell minimal Apple-style:
+ * - TopBar fixo 56px (mobile = só logo, desktop = nav inline)
+ * - Main centralizado max-w-2xl no mobile, max-w-5xl desktop
+ * - BottomNav só no mobile (lg:hidden)
+ * - Sem side nav, sem glass exagerado, sem pílulas
  */
-export function AppShell({ children, userName, title, subtitle }: AppShellProps) {
+export function AppShell({ children }: AppShellProps) {
   return (
-    <div className="min-h-screen bg-surface">
-      <SideNav />
-      <TopBar title={title} subtitle={subtitle} userInitial={getInitial(userName)} />
-
-      {/* Main: respeita SideNav no desktop, TopBar no mobile */}
-      <main className="lg:pl-64 pt-16 pb-28 lg:pb-8 min-h-screen">
-        <div className="mx-auto w-full max-w-lg lg:max-w-7xl px-4 lg:px-8 py-6">
+    <div className="min-h-screen bg-background">
+      <TopBar />
+      <main className="pt-14 pb-24 lg:pb-12 min-h-screen">
+        <div className="max-w-2xl lg:max-w-5xl mx-auto px-5 lg:px-8 py-8 lg:py-12">
           {children}
         </div>
       </main>
-
       <BottomNav />
     </div>
   )

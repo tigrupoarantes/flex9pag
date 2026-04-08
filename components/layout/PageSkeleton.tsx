@@ -5,20 +5,19 @@ interface PageSkeletonProps {
 }
 
 /**
- * Skeleton genérico exibido enquanto o Server Component está
- * resolvendo as queries. Renderizado automaticamente pelo loading.tsx
- * de cada rota via Suspense boundary do App Router.
+ * Skeleton genérico exibido enquanto o Server Component resolve.
+ * Renderizado automaticamente pelo loading.tsx via Suspense boundary.
  *
- * Não precisa ser pixel-perfect — só dar a forma da página pra
- * evitar que o usuário veja "tela em branco".
+ * Mantém forma do layout Apple-style: pulses de cinza claro,
+ * sem cards coloridos.
  */
 export function PageSkeleton({ variant }: PageSkeletonProps) {
   return (
-    <div className="flex flex-col gap-6 lg:gap-8 animate-pulse">
+    <div className="flex flex-col gap-6 animate-pulse">
       {/* Header genérico */}
       <div>
-        <div className="h-8 lg:h-12 w-2/3 bg-surface-container rounded-lg" />
-        <div className="h-4 w-1/2 bg-surface-container rounded mt-2" />
+        <div className="h-9 lg:h-10 w-2/3 bg-secondary rounded-md" />
+        <div className="h-4 w-1/2 bg-secondary rounded-md mt-3" />
       </div>
 
       {variant === 'dashboard' && <DashboardSkeleton />}
@@ -31,23 +30,17 @@ export function PageSkeleton({ variant }: PageSkeletonProps) {
 function DashboardSkeleton() {
   return (
     <>
-      {/* Bento financeiro */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-        {[0, 1].map((i) => (
-          <div
-            key={i}
-            className="bg-surface-container-low h-40 rounded-3xl"
-          />
-        ))}
+      <div className="mt-4">
+        <div className="h-14 w-3/4 bg-secondary rounded-md" />
+        <div className="h-4 w-32 bg-secondary rounded-md mt-3" />
       </div>
-      {/* Quick actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {[0, 1].map((i) => (
-          <div key={i} className="bg-surface-container-low h-20 rounded-3xl" />
-        ))}
+      <div className="hairline mt-6" />
+      <div>
+        <div className="h-4 w-20 bg-secondary rounded-md" />
+        <div className="h-8 w-40 bg-secondary rounded-md mt-2" />
       </div>
-      {/* Recentes */}
-      <div className="bg-surface-container-low h-72 rounded-3xl" />
+      <div className="hairline" />
+      <div className="h-12 w-full bg-secondary rounded-md mt-2" />
     </>
   )
 }
@@ -55,19 +48,24 @@ function DashboardSkeleton() {
 function ListSkeleton() {
   return (
     <>
-      {/* Search + filtros */}
-      <div className="bg-surface-container h-14 rounded-2xl" />
-      <div className="bg-surface-container-low h-12 rounded-2xl" />
-      {/* Cards */}
-      <div className="grid grid-cols-1 gap-3">
-        {[0, 1, 2, 3, 4].map((i) => (
+      <div className="h-10 w-full bg-secondary rounded-md" />
+      <div className="flex gap-2">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="h-7 w-16 bg-secondary rounded-full" />
+        ))}
+      </div>
+      <div className="border-t border-border mt-2">
+        {[0, 1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
-            className={cn(
-              'bg-surface-container-lowest rounded-2xl border border-outline-variant/20',
-              'h-24 lg:h-28'
-            )}
-          />
+            className={cn('flex justify-between py-4 border-b border-border')}
+          >
+            <div className="space-y-2">
+              <div className="h-4 w-40 bg-secondary rounded-md" />
+              <div className="h-3 w-24 bg-secondary rounded-md" />
+            </div>
+            <div className="h-5 w-16 bg-secondary rounded-md" />
+          </div>
         ))}
       </div>
     </>
@@ -76,12 +74,21 @@ function ListSkeleton() {
 
 function GridSkeleton() {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-5">
+    <div className="border-t border-border">
       {Array.from({ length: 12 }).map((_, i) => (
         <div
           key={i}
-          className="bg-surface-container-low h-36 rounded-2xl"
-        />
+          className="flex items-center justify-between py-4 border-b border-border"
+        >
+          <div className="flex items-center gap-3">
+            <div className="size-10 rounded-full bg-secondary" />
+            <div className="space-y-2">
+              <div className="h-4 w-24 bg-secondary rounded-md" />
+              <div className="h-3 w-32 bg-secondary rounded-md" />
+            </div>
+          </div>
+          <div className="h-5 w-16 bg-secondary rounded-md" />
+        </div>
       ))}
     </div>
   )

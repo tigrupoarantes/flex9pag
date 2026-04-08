@@ -2,6 +2,15 @@
 
 import { useState } from 'react'
 import {
+  QrCode,
+  Banknote,
+  CreditCard,
+  Landmark,
+  Receipt,
+  MoreHorizontal,
+  type LucideIcon,
+} from 'lucide-react'
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -10,33 +19,29 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Icon, type IconName } from '@/components/ui/icon'
 import { cn } from '@/lib/utils'
 import type { PaymentMethod } from '@/lib/types'
 
 interface MarcarPagoDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  /** Chamada quando o usuário confirma — recebe o método selecionado. */
   onConfirm: (method: PaymentMethod) => void
-  /** True enquanto a mutation está rolando — desabilita botões. */
   loading?: boolean
 }
 
 interface MethodOption {
   value: PaymentMethod
   label: string
-  description: string
-  icon: IconName
+  Icon: LucideIcon
 }
 
 const METHODS: MethodOption[] = [
-  { value: 'pix', label: 'Pix', description: 'Recebido na conta', icon: 'qr_code_2' },
-  { value: 'cash', label: 'Dinheiro', description: 'Em espécie', icon: 'payments' },
-  { value: 'credit_card', label: 'Cartão', description: 'Crédito ou débito', icon: 'badge' },
-  { value: 'transfer', label: 'Transferência', description: 'TED ou DOC', icon: 'account_balance' },
-  { value: 'boleto', label: 'Boleto', description: 'Pago no banco', icon: 'receipt_long' },
-  { value: 'other', label: 'Outro', description: 'Outra forma', icon: 'more_horiz' },
+  { value: 'pix', label: 'Pix', Icon: QrCode },
+  { value: 'cash', label: 'Dinheiro', Icon: Banknote },
+  { value: 'credit_card', label: 'Cartão', Icon: CreditCard },
+  { value: 'transfer', label: 'Transferência', Icon: Landmark },
+  { value: 'boleto', label: 'Boleto', Icon: Receipt },
+  { value: 'other', label: 'Outro', Icon: MoreHorizontal },
 ]
 
 export function MarcarPagoDialog({
@@ -61,13 +66,15 @@ export function MarcarPagoDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-headline text-xl">Como você recebeu?</DialogTitle>
-          <DialogDescription className="text-sm">
-            Escolha a forma de pagamento para registrar este recebimento.
+          <DialogTitle className="text-xl font-semibold tracking-tight">
+            Como você recebeu?
+          </DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
+            Escolha a forma de pagamento.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-3 py-4">
+        <div className="grid grid-cols-2 gap-2 py-4">
           {METHODS.map((m) => {
             const isSelected = selected === m.value
             return (
@@ -77,34 +84,28 @@ export function MarcarPagoDialog({
                 onClick={() => setSelected(m.value)}
                 disabled={loading}
                 className={cn(
-                  'flex flex-col items-start gap-2 p-4 rounded-2xl text-left transition-all',
-                  'border-2 active:scale-[0.98]',
+                  'flex items-center gap-3 p-4 rounded-lg text-left transition-all',
+                  'border active:scale-[0.98]',
                   isSelected
-                    ? 'border-primary bg-primary-fixed'
-                    : 'border-outline-variant/40 bg-surface-container-low hover:border-outline-variant'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border bg-secondary hover:border-border-strong'
                 )}
               >
-                <div
+                <m.Icon
                   className={cn(
-                    'w-10 h-10 rounded-xl flex items-center justify-center',
-                    isSelected
-                      ? 'bg-primary text-on-primary'
-                      : 'bg-surface-container-high text-on-surface-variant'
+                    'size-5',
+                    isSelected ? 'text-primary' : 'text-muted-foreground'
+                  )}
+                  strokeWidth={2}
+                />
+                <span
+                  className={cn(
+                    'text-sm font-semibold',
+                    isSelected ? 'text-primary' : 'text-foreground'
                   )}
                 >
-                  <Icon name={m.icon} filled={isSelected} />
-                </div>
-                <div>
-                  <p
-                    className={cn(
-                      'font-bold text-sm',
-                      isSelected ? 'text-primary' : 'text-on-surface'
-                    )}
-                  >
-                    {m.label}
-                  </p>
-                  <p className="text-xs text-on-surface-variant">{m.description}</p>
-                </div>
+                  {m.label}
+                </span>
               </button>
             )
           })}
@@ -116,7 +117,7 @@ export function MarcarPagoDialog({
             variant="ghost"
             onClick={() => handleOpenChange(false)}
             disabled={loading}
-            className="h-12"
+            className="h-11"
           >
             Cancelar
           </Button>
@@ -124,9 +125,9 @@ export function MarcarPagoDialog({
             type="button"
             onClick={handleConfirm}
             disabled={!selected || loading}
-            className="h-12 font-bold"
+            className="h-11 bg-primary hover:bg-primary-hover font-semibold"
           >
-            {loading ? 'Salvando...' : 'Confirmar pagamento'}
+            {loading ? 'Salvando...' : 'Confirmar'}
           </Button>
         </DialogFooter>
       </DialogContent>

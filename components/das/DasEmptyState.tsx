@@ -3,18 +3,14 @@
 import { useRouter } from 'next/navigation'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { Calendar, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { Icon } from '@/components/ui/icon'
 
 interface DasEmptyStateProps {
   userId: string
   year: number
 }
 
-/**
- * Empty state da página DAS — botão "Criar guias do ano" que dispara
- * a função RPC seed_das_for_user já criada na migration 012.
- */
 export function DasEmptyState({ userId, year }: DasEmptyStateProps) {
   const supabase = createClient()
   const queryClient = useQueryClient()
@@ -30,32 +26,29 @@ export function DasEmptyState({ userId, year }: DasEmptyStateProps) {
     onSuccess: () => {
       toast.success(`Guias DAS de ${year} criadas!`)
       queryClient.invalidateQueries({ queryKey: ['das'] })
-      // router.refresh() re-executa o Server Component sem recarregar o app
       router.refresh()
     },
-    onError: () => {
-      toast.error('Erro ao criar as guias. Tente novamente.')
-    },
+    onError: () => toast.error('Erro ao criar as guias. Tente novamente.'),
   })
 
   return (
-    <div className="bg-surface-container-low rounded-3xl p-10 lg:p-12 text-center max-w-2xl mx-auto">
-      <div className="inline-flex w-20 h-20 rounded-3xl bg-primary-fixed text-primary items-center justify-center mb-5">
-        <Icon name="calendar_month" className="text-4xl" filled />
+    <div className="flex flex-col items-center text-center py-16">
+      <div className="size-14 rounded-full bg-secondary flex items-center justify-center mb-4">
+        <Calendar className="size-7 text-muted-foreground" strokeWidth={1.75} />
       </div>
-      <h2 className="font-headline font-extrabold text-2xl text-on-surface mb-2">
-        Você ainda não tem suas guias DAS de {year}
-      </h2>
-      <p className="text-on-surface-variant max-w-md mx-auto mb-6">
-        Vamos criar as 12 guias do ano para você acompanhar mês a mês. É rapidinho.
+      <h3 className="text-lg font-semibold text-foreground mb-1">
+        Sem guias DAS de {year}
+      </h3>
+      <p className="text-sm text-muted-foreground mb-6 max-w-xs">
+        Vamos criar as 12 guias do ano para você acompanhar mês a mês.
       </p>
       <button
         type="button"
         onClick={() => seed.mutate()}
         disabled={seed.isPending}
-        className="inline-flex items-center gap-2 bg-primary text-on-primary px-6 py-4 rounded-xl font-bold shadow-lg shadow-primary/20 active:scale-95 transition-transform disabled:opacity-60"
+        className="inline-flex items-center gap-1.5 h-11 px-5 rounded-md bg-primary text-white text-sm font-semibold hover:bg-primary-hover active:scale-95 transition-all disabled:opacity-60"
       >
-        <Icon name="add" />
+        <Plus className="size-4" strokeWidth={2.5} />
         {seed.isPending ? 'Criando...' : 'Criar guias do ano'}
       </button>
     </div>

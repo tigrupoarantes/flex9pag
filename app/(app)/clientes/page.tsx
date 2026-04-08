@@ -1,9 +1,8 @@
-import { createClient } from '@/lib/supabase/server'
-import { TopBar } from '@/components/layout/TopBar'
-import { ClientesList } from '@/components/clientes/ClientesList'
-import { Button } from '@/components/ui/button'
-import { PlusCircle } from 'lucide-react'
 import Link from 'next/link'
+import { Plus } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { ClientesList } from '@/components/clientes/ClientesList'
 
 export default async function ClientesPage() {
   const supabase = await createClient()
@@ -16,19 +15,21 @@ export default async function ClientesPage() {
     .order('name')
 
   return (
-    <div>
-      <TopBar
+    <>
+      <PageHeader
         title="Clientes"
+        subtitle="Quem você atende."
         action={
-          <Link href="/clientes/novo">
-            <Button size="sm" className="h-9 gap-1">
-              <PlusCircle className="h-4 w-4" />
-              Novo
-            </Button>
+          <Link
+            href="/clientes/novo"
+            className="inline-flex items-center gap-1.5 h-10 px-4 rounded-md bg-primary text-white text-sm font-medium hover:bg-primary-hover active:scale-95 transition-all"
+          >
+            <Plus className="size-4" strokeWidth={2.5} />
+            Novo
           </Link>
         }
       />
       <ClientesList initialClients={clients ?? []} />
-    </div>
+    </>
   )
 }

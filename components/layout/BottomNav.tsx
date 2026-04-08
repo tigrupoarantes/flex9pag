@@ -2,63 +2,47 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Icon, type IconName } from '@/components/ui/icon'
+import { Home, Receipt, HandCoins, Menu } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-interface NavItem {
-  href: string
-  label: string
-  icon: IconName
-}
-
-const navItems: NavItem[] = [
-  { href: '/inicio', label: 'Início', icon: 'home' },
-  { href: '/servicos', label: 'Serviços', icon: 'receipt_long' },
-  { href: '/cobrar', label: 'Cobrar', icon: 'send_money' },
-  { href: '/configuracoes', label: 'Mais', icon: 'menu' },
+const NAV = [
+  { href: '/inicio', label: 'Início', Icon: Home },
+  { href: '/servicos', label: 'Serviços', Icon: Receipt },
+  { href: '/cobrar', label: 'Cobrar', Icon: HandCoins },
+  { href: '/configuracoes', label: 'Mais', Icon: Menu },
 ]
 
+/**
+ * Bottom nav Apple-style: branca opaca, hairline em cima, 4 ícones.
+ * Ativo = preto, inativo = cinza. Sem pílulas, sem glass exagerado.
+ */
 export function BottomNav() {
   const pathname = usePathname()
 
   return (
     <nav
       className={cn(
-        'lg:hidden fixed bottom-0 left-0 right-0 z-50',
-        'bg-white/80 backdrop-blur-3xl',
-        'shadow-[0_-12px_32px_rgba(0,0,0,0.06)]',
-        'rounded-t-3xl safe-area-pb'
+        'lg:hidden fixed bottom-0 inset-x-0 z-50',
+        'bg-white/95 backdrop-blur-xl',
+        'border-t border-border',
+        'safe-area-pb'
       )}
     >
-      <div className="max-w-lg mx-auto flex items-center justify-around px-4 pb-2 pt-3">
-        {navItems.map((item) => {
-          const isActive = pathname.startsWith(item.href)
+      <div className="max-w-lg mx-auto flex items-stretch justify-around h-14">
+        {NAV.map(({ href, label, Icon }) => {
+          const isActive = pathname.startsWith(href)
           return (
             <Link
-              key={item.href}
-              href={item.href}
+              key={href}
+              href={href}
               className={cn(
-                'flex flex-col items-center justify-center transition-all duration-200',
-                'min-w-[64px] min-h-[48px] active:scale-90',
-                isActive
-                  ? 'bg-primary text-on-primary rounded-2xl px-5 py-2 scale-105 shadow-lg shadow-primary/20'
-                  : 'text-on-surface-variant/70 hover:text-on-surface px-3 py-2'
+                'flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors',
+                'min-h-[48px]',
+                isActive ? 'text-foreground' : 'text-muted-foreground'
               )}
             >
-              <Icon
-                name={item.icon}
-                filled={isActive}
-                weight={isActive ? 600 : 400}
-                className="text-2xl mb-0.5"
-              />
-              <span
-                className={cn(
-                  'text-[10px] font-bold tracking-wide',
-                  isActive ? 'text-on-primary' : 'text-on-surface-variant/70'
-                )}
-              >
-                {item.label}
-              </span>
+              <Icon className="size-[22px]" strokeWidth={isActive ? 2.25 : 1.75} />
+              <span className="text-[10px] font-medium tracking-tight">{label}</span>
             </Link>
           )
         })}

@@ -16,7 +16,6 @@ import { Label } from '@/components/ui/label'
 interface MarcarDasPagoDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  /** Recebe data (YYYY-MM-DD) e URL de comprovante (opcional). */
   onConfirm: (data: { paid_at: string; receipt_url: string | null }) => void
   loading?: boolean
   competenceLabel?: string
@@ -36,7 +35,6 @@ export function MarcarDasPagoDialog({
   const [paidAt, setPaidAt] = useState(todayISO())
   const [receiptUrl, setReceiptUrl] = useState('')
 
-  // Reset ao abrir
   useEffect(() => {
     if (open) {
       setPaidAt(todayISO())
@@ -45,46 +43,47 @@ export function MarcarDasPagoDialog({
   }, [open])
 
   function handleConfirm() {
-    onConfirm({
-      paid_at: paidAt,
-      receipt_url: receiptUrl.trim() || null,
-    })
+    onConfirm({ paid_at: paidAt, receipt_url: receiptUrl.trim() || null })
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-headline text-xl">
-            Confirmar pagamento{competenceLabel ? ` — ${competenceLabel}` : ''}
+          <DialogTitle className="text-xl font-semibold tracking-tight">
+            Confirmar pagamento
           </DialogTitle>
-          <DialogDescription className="text-sm">
-            Os campos abaixo são opcionais. Se quiser, anote a data exata do pagamento e o link do comprovante.
+          <DialogDescription className="text-sm text-muted-foreground">
+            {competenceLabel ? `${competenceLabel} · ` : ''}Os dois campos são opcionais.
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4 py-2">
           <div className="space-y-2">
-            <Label htmlFor="paid_at">Data do pagamento</Label>
+            <Label htmlFor="paid_at" className="text-sm font-medium">
+              Data do pagamento
+            </Label>
             <Input
               id="paid_at"
               type="date"
               value={paidAt}
               onChange={(e) => setPaidAt(e.target.value)}
-              className="h-12 text-base"
+              className="h-11 text-base"
               disabled={loading}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="receipt_url">Link do comprovante (opcional)</Label>
+            <Label htmlFor="receipt_url" className="text-sm font-medium">
+              Link do comprovante
+            </Label>
             <Input
               id="receipt_url"
               type="url"
               placeholder="https://..."
               value={receiptUrl}
               onChange={(e) => setReceiptUrl(e.target.value)}
-              className="h-12 text-base"
+              className="h-11 text-base"
               disabled={loading}
             />
           </div>
@@ -96,7 +95,7 @@ export function MarcarDasPagoDialog({
             variant="ghost"
             onClick={() => onOpenChange(false)}
             disabled={loading}
-            className="h-12"
+            className="h-11"
           >
             Cancelar
           </Button>
@@ -104,7 +103,7 @@ export function MarcarDasPagoDialog({
             type="button"
             onClick={handleConfirm}
             disabled={loading}
-            className="h-12 font-bold bg-secondary text-on-secondary hover:bg-secondary/90"
+            className="h-11 bg-primary hover:bg-primary-hover font-semibold"
           >
             {loading ? 'Salvando...' : 'Confirmar pagamento'}
           </Button>

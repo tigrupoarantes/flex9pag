@@ -1,73 +1,64 @@
-import { ReactNode } from 'react'
-import { Icon } from '@/components/ui/icon'
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 interface TopBarProps {
-  /** Título exibido no centro/esquerda. Opcional — quando ausente, mostra só a logo flex9pag. */
-  title?: string
-  /** Subtítulo abaixo do título (mobile). */
-  subtitle?: string
-  /** Slot à direita — botão custom, link, etc. */
-  action?: ReactNode
-  /** Iniciais do usuário para o avatar. */
-  userInitial?: string
   className?: string
 }
 
-export function TopBar({ title, subtitle, action, userInitial, className }: TopBarProps) {
+const NAV = [
+  { href: '/inicio', label: 'Início' },
+  { href: '/servicos', label: 'Serviços' },
+  { href: '/clientes', label: 'Clientes' },
+  { href: '/das', label: 'DAS' },
+  { href: '/configuracoes', label: 'Configurações' },
+]
+
+/**
+ * Top bar Apple-style: branca opaca, hairline embaixo, 56px de altura
+ * fixa no topo. No mobile mostra só o nome do app. No desktop, nav inline.
+ */
+export function TopBar({ className }: TopBarProps) {
+  const pathname = usePathname()
+
   return (
     <header
       className={cn(
-        'fixed top-0 inset-x-0 z-40',
-        'bg-white/70 backdrop-blur-2xl',
-        'shadow-sm border-b border-outline-variant/20',
+        'fixed top-0 inset-x-0 z-40 h-14 bg-white/90 backdrop-blur-xl',
+        'border-b border-border',
         className
       )}
     >
-      <div className="flex items-center justify-between px-4 lg:px-8 py-3 lg:pl-72">
-        {/* Lado esquerdo */}
-        <div className="flex items-center gap-3 min-w-0">
-          {userInitial ? (
-            <div className="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-base shrink-0">
-              {userInitial}
-            </div>
-          ) : null}
-          <div className="min-w-0">
-            {title ? (
-              <h1 className="font-headline font-extrabold text-base lg:text-xl text-on-surface tracking-tight leading-tight truncate">
-                {title}
-              </h1>
-            ) : (
-              <h1 className="font-headline font-extrabold text-xl text-primary tracking-tight">
-                flex9pag
-              </h1>
-            )}
-            {subtitle ? (
-              <p className="text-xs text-on-surface-variant font-medium truncate">
-                {subtitle}
-              </p>
-            ) : null}
-          </div>
-        </div>
+      <div className="h-full max-w-5xl mx-auto px-5 lg:px-8 flex items-center justify-between">
+        <Link
+          href="/inicio"
+          className="text-[17px] font-semibold tracking-tight text-foreground"
+        >
+          flex9pag
+        </Link>
 
-        {/* Lado direito */}
-        <div className="flex items-center gap-1">
-          {action}
-          <button
-            type="button"
-            className="p-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-colors active:scale-95 hidden md:inline-flex"
-            aria-label="Notificações"
-          >
-            <Icon name="notifications" />
-          </button>
-          <button
-            type="button"
-            className="p-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-colors active:scale-95 hidden md:inline-flex"
-            aria-label="Ajuda"
-          >
-            <Icon name="help" />
-          </button>
-        </div>
+        {/* Nav inline desktop */}
+        <nav className="hidden lg:flex items-center gap-1">
+          {NAV.map((item) => {
+            const isActive = pathname.startsWith(item.href)
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+                  isActive
+                    ? 'text-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                )}
+              >
+                {item.label}
+              </Link>
+            )
+          })}
+        </nav>
       </div>
     </header>
   )
