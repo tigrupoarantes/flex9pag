@@ -28,10 +28,14 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // Rotas públicas — não precisam de auth
+  // /api/webhooks/* precisa estar aqui senão o proxy redireciona POSTs
+  // de gateways de pagamento (Mercado Pago, Stripe) para /login.
   const isPublic =
     pathname.startsWith('/login') ||
     pathname.startsWith('/cadastro') ||
     pathname.startsWith('/pagar') ||
+    pathname.startsWith('/api/webhooks/') ||
+    pathname.startsWith('/auth/callback') ||
     pathname === '/'
 
   // Sem usuário + rota privada → redirecionar para login
