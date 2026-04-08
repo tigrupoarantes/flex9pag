@@ -1,167 +1,161 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { CheckCircle, Clock, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react'
-import { formatCurrency } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
 import type { DasPayment } from '@/lib/types'
+import { formatCurrency, formatMonthYear } from '@/lib/utils'
+import { Icon } from '@/components/ui/icon'
+import { DasMonthCard } from './DasMonthCard'
+import { DasEmptyState } from './DasEmptyState'
+import { DasInstructions } from './DasInstructions'
+import { MarcarDasPagoDialog } from './MarcarDasPagoDialog'
 
 interface DasListProps {
   das: DasPayment[]
+  userId: string
+  year: number
 }
 
-const MONTH_NAMES = [
-  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-]
+const FAR_FUTURE_THRESHOLD_DAYS = 60
 
-function getMonthLabel(competenceMonth: string) {
-  const [year, month] = competenceMonth.split('-')
-  return `${MONTH_NAMES[parseInt(month) - 1]} ${year}`
-}
-
-function StatusIcon({ status }: { status: DasPayment['status'] }) {
-  if (status === 'paid') return <CheckCircle className="h-5 w-5 text-green-600" />
-  if (status === 'overdue') return <AlertCircle className="h-5 w-5 text-red-500" />
-  return <Clock className="h-5 w-5 text-amber-500" />
-}
-
-function StatusLabel({ status }: { status: DasPayment['status'] }) {
-  if (status === 'paid') return <span className="text-green-700 font-medium text-sm">Pago</span>
-  if (status === 'overdue') return <span className="text-red-600 font-medium text-sm">Vencido</span>
-  return <span className="text-amber-600 font-medium text-sm">Pendente</span>
-}
-
-export function DasList({ das }: DasListProps) {
+export function DasList({ das, userId, year }: DasListProps) {
   const supabase = createClient()
   const queryClient = useQueryClient()
-  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [selected, setSelected] = useState<DasPayment | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
 
-  const currentYear = new Date().getFullYear()
-  const currentMonth = new Date().getMonth() + 1
+  const now = new Date()
+  const currentMonth = now.getMonth()
+
+  const nextDue = useMemo(() => {
+    return das
+      .filter((d) => d.status === 'pending')
+      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())[0]
+  }, [das])
 
   const markPaid = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (payload: {
+      id: string
+      paid_at: string
+      receipt_url: string | null
+    }) => {
       const { error } = await supabase
         .from('das_payments')
-        .update({ status: 'paid', paid_at: new Date().toISOString() })
-        .eq('id', id)
+        .update({
+          status: 'paid',
+          paid_at: payload.paid_at,
+          receipt_url: payload.receipt_url,
+        })
+        .eq('id', payload.id)
       if (error) throw error
     },
     onSuccess: () => {
       toast.success('DAS marcado como pago!')
       queryClient.invalidateQueries({ queryKey: ['das'] })
+      setDialogOpen(false)
+      setSelected(null)
+      // Server component precisa re-fetch
       window.location.reload()
     },
-    onError: () => toast.error('Erro ao atualizar. Tente novamente.'),
+    onError: () => toast.error('Erro ao salvar. Tente novamente.'),
   })
 
-  const paid = das.filter(d => d.status === 'paid').length
-  const total = das.length
+  function handleOpenMark(d: DasPayment) {
+    setSelected(d)
+    setDialogOpen(true)
+  }
+
+  // Empty state — usuário ainda não tem guias do ano
+  if (das.length === 0) {
+    return (
+      <div className="flex flex-col gap-8">
+        <header>
+          <h1 className="font-headline font-extrabold text-2xl lg:text-4xl text-on-surface tracking-tight">
+            Meu DAS {year}
+          </h1>
+          <p className="text-on-surface-variant text-sm lg:text-base mt-1 max-w-2xl">
+            Mantenha suas obrigações em dia para garantir seus benefícios do INSS.
+          </p>
+        </header>
+        <DasEmptyState userId={userId} year={year} />
+        <DasInstructions />
+      </div>
+    )
+  }
 
   return (
-    <div className="px-4 py-4 space-y-4">
-      {/* Resumo */}
-      <div className="bg-blue-50 rounded-xl p-4 flex items-center justify-between">
+    <div className="flex flex-col gap-8 lg:gap-10">
+      {/* Header com card "Próximo vencimento" */}
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <p className="text-sm text-blue-700 font-medium">Guias pagas em 2026</p>
-          <p className="text-2xl font-bold text-blue-900">{paid} de {total}</p>
+          <h1 className="font-headline font-extrabold text-2xl lg:text-4xl text-on-surface tracking-tight">
+            Meu DAS {year}
+          </h1>
+          <p className="text-on-surface-variant text-sm lg:text-base mt-1 max-w-xl">
+            Mantenha suas obrigações em dia para garantir seus benefícios do INSS.
+          </p>
         </div>
-        <div className="text-right">
-          <p className="text-xs text-blue-600">Valor mensal</p>
-          <p className="text-lg font-bold text-blue-800">R$ 75,60</p>
-        </div>
-      </div>
-
-      <p className="text-xs text-gray-500 text-center">
-        Vencimento todo dia 20 do mês seguinte à competência
-      </p>
-
-      {/* Lista */}
-      <div className="space-y-2">
-        {das.map((item) => {
-          const [year, month] = item.competence_month.split('-').map(Number)
-          const isCurrentOrFuture = year > currentYear || (year === currentYear && month >= currentMonth)
-          const isExpanded = expandedId === item.id
-
-          return (
-            <div
-              key={item.id}
-              className={`rounded-xl border ${
-                item.status === 'paid'
-                  ? 'bg-white border-gray-200'
-                  : item.status === 'overdue'
-                  ? 'bg-red-50 border-red-200'
-                  : isCurrentOrFuture && month === currentMonth
-                  ? 'bg-amber-50 border-amber-200'
-                  : 'bg-white border-gray-200'
-              }`}
-            >
-              <button
-                className="w-full flex items-center gap-3 p-4 text-left"
-                onClick={() => setExpandedId(isExpanded ? null : item.id)}
-              >
-                <StatusIcon status={item.status} />
-                <div className="flex-1">
-                  <p className="font-semibold text-sm">{getMonthLabel(item.competence_month)}</p>
-                  <p className="text-xs text-gray-500">
-                    Vence {new Date(item.due_date).toLocaleDateString('pt-BR')}
-                  </p>
-                </div>
-                <div className="text-right mr-2">
-                  <p className="font-bold text-sm">{formatCurrency(item.amount ?? 75.6)}</p>
-                  <StatusLabel status={item.status} />
-                </div>
-                {isExpanded ? (
-                  <ChevronUp className="h-4 w-4 text-gray-400" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-gray-400" />
-                )}
-              </button>
-
-              {isExpanded && item.status !== 'paid' && (
-                <div className="px-4 pb-4 pt-0 space-y-3">
-                  {item.status === 'overdue' && (
-                    <p className="text-xs text-red-600 bg-red-100 rounded-lg p-2">
-                      Esta guia está vencida. Pague o mais rápido possível para evitar multas.
-                    </p>
-                  )}
-                  <Button
-                    className="w-full h-12 gap-2"
-                    onClick={() => markPaid.mutate(item.id)}
-                    disabled={markPaid.isPending}
-                  >
-                    <CheckCircle className="h-4 w-4" />
-                    Marcar como pago
-                  </Button>
-                  <p className="text-xs text-gray-400 text-center">
-                    Pague no app do seu banco usando o código de barras da guia DAS
-                  </p>
-                </div>
-              )}
-
-              {isExpanded && item.status === 'paid' && (
-                <div className="px-4 pb-4 pt-0">
-                  <p className="text-sm text-green-700 text-center">
-                    Pago em {item.paid_at
-                      ? new Date(item.paid_at).toLocaleDateString('pt-BR')
-                      : '—'}
-                  </p>
-                </div>
-              )}
+        {nextDue && (
+          <div className="bg-surface-container-low p-5 rounded-2xl flex items-center gap-3 border-l-4 border-secondary shadow-sm">
+            <div className="bg-secondary-container p-3 rounded-xl shrink-0">
+              <Icon name="verified" filled className="text-secondary text-2xl" />
             </div>
+            <div className="min-w-0">
+              <p className="text-xs text-on-surface-variant">Próximo vencimento</p>
+              <p className="font-bold text-base text-on-surface truncate">
+                {new Date(nextDue.due_date).toLocaleDateString('pt-BR', {
+                  day: '2-digit',
+                  month: 'short',
+                })}
+                {' · '}
+                {formatCurrency(nextDue.amount ?? 75.6)}
+              </p>
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* Grid de 12 meses */}
+      <section className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-5">
+        {das.map((item) => {
+          const compMonth = new Date(item.competence_month).getMonth()
+          const isCurrent = compMonth === currentMonth && item.status === 'pending'
+          const dueIn = new Date(item.due_date).getTime() - now.getTime()
+          const dueDays = dueIn / (1000 * 60 * 60 * 24)
+          const isFarFuture = item.status === 'pending' && dueDays > FAR_FUTURE_THRESHOLD_DAYS
+          return (
+            <DasMonthCard
+              key={item.id}
+              das={item}
+              isCurrent={isCurrent}
+              isFarFuture={isFarFuture}
+              onMarkPaid={handleOpenMark}
+            />
           )
         })}
-      </div>
+      </section>
 
-      <div className="bg-gray-50 rounded-xl p-4 text-xs text-gray-500 space-y-1">
-        <p className="font-medium text-gray-700">O que é o DAS?</p>
-        <p>DAS é o imposto mensal do MEI — R$ 75,60/mês para serviços.</p>
-        <p>Pague até o dia 20 do mês seguinte para evitar multa.</p>
-      </div>
+      {/* Bento de instruções */}
+      <DasInstructions />
+
+      {/* Modal "Marcar como pago" */}
+      <MarcarDasPagoDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        loading={markPaid.isPending}
+        competenceLabel={selected ? formatMonthYear(selected.competence_month) : undefined}
+        onConfirm={(data) => {
+          if (selected) {
+            markPaid.mutate({
+              id: selected.id,
+              paid_at: data.paid_at,
+              receipt_url: data.receipt_url,
+            })
+          }
+        }}
+      />
     </div>
   )
 }

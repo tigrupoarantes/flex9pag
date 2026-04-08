@@ -1,18 +1,39 @@
-import { Badge } from '@/components/ui/badge'
 import { ServiceStatus } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
-const config: Record<ServiceStatus, { label: string; className: string }> = {
-  paid:      { label: 'Recebido ✓',  className: 'bg-green-100 text-green-800 hover:bg-green-100' },
-  pending:   { label: 'Pendente',    className: 'bg-amber-100 text-amber-800 hover:bg-amber-100' },
-  cancelled: { label: 'Cancelado',   className: 'bg-gray-100 text-gray-600 hover:bg-gray-100' },
+const CONFIG: Record<ServiceStatus, { label: string; className: string }> = {
+  paid: {
+    label: 'Pago',
+    className: 'bg-secondary-container text-on-secondary-container',
+  },
+  pending: {
+    label: 'Pendente',
+    className: 'bg-tertiary-fixed text-on-tertiary-fixed-variant',
+  },
+  cancelled: {
+    label: 'Cancelado',
+    className: 'bg-surface-container-high text-on-surface-variant',
+  },
 }
 
-export function StatusBadge({ status }: { status: ServiceStatus }) {
-  const { label, className } = config[status]
+interface StatusBadgeProps {
+  status: ServiceStatus
+  className?: string
+  size?: 'sm' | 'md'
+}
+
+export function StatusBadge({ status, className, size = 'sm' }: StatusBadgeProps) {
+  const { label, className: variantClass } = CONFIG[status]
   return (
-    <Badge className={cn('text-xs font-semibold border-0', className)}>
+    <span
+      className={cn(
+        'inline-flex items-center rounded-full font-bold tracking-wide',
+        size === 'sm' ? 'text-[10px] px-2.5 py-0.5' : 'text-xs px-3 py-1',
+        variantClass,
+        className
+      )}
+    >
       {label}
-    </Badge>
+    </span>
   )
 }
