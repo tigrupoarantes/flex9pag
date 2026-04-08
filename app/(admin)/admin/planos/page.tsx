@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { AdminPlanosList } from '@/components/admin/AdminPlanosList'
+import type { Plan } from '@/lib/types'
 
 export default async function AdminPlanosPage() {
   const supabase = await createClient()
@@ -13,7 +14,7 @@ export default async function AdminPlanosPage() {
   return (
     <>
       <PageHeader title="Planos" subtitle="Pacotes de assinatura disponíveis." />
-      <AdminPlanosList plans={plans ?? []} />
+      <AdminPlanosList initialPlans={(plans ?? []) as Plan[]} />
     </>
   )
 }
